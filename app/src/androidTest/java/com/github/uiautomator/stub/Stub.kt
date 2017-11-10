@@ -47,11 +47,31 @@ class Stub {
     @LargeTest
     @FlakyTest(tolerance = 3)
     @Throws(InterruptedException::class)
-    fun testUIAutomatorStub() {
+    fun testUIAutomatorLocalStreamStub() {
         val jsonRpcServer = JsonRpcServer(ObjectMapper(), AutomatorServiceImpl(), AutomatorService::class.java)
         val localStreamServer = LocalStreamServer(jsonRpcServer, "myuiautomator", 5)
         UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).wakeUp()
         localStreamServer.start()
     }
 
+    @Test
+    @LargeTest
+    @FlakyTest(tolerance = 3)
+    @Throws(InterruptedException::class)
+    fun testUIAutomatorHttpStub() {
+        val PORT = 9008
+        val server = AutomatorHttpServer(PORT)
+
+        try{
+            server.route("/jsonrpc/0", JsonRpcServer(ObjectMapper(), AutomatorServiceImpl(), AutomatorService::class.java))
+            server.start()
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).wakeUp()
+
+            while(server.isAlive())
+                Thread.sleep(100)
+
+        }finally{
+            server.stop()
+        }
+    }
 }
